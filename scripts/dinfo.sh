@@ -1,7 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 DINFO_STRT_TIME=$(date +%s)
 
-# (C) Sergey Tyurin  2021-08-29 15:00:00
+# (C) Sergey Tyurin  2021-10-19 15:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -36,7 +37,7 @@ source "${SCRIPT_DIR}/functions.shinc"
 
 #=================================================
 echo
-echo "INFO from env: Network: $NETWORK_TYPE; Node: $NODE_TYPE; Elector: $ELECTOR_TYPE; Staking mode: $STAKE_MODE"
+echo -e "$(DispEnvInfo)"
 echo
 echo -e "$(Determine_Current_Network)"
 echo
@@ -65,7 +66,7 @@ fi
 
 dpc_addr=`echo $Depool_addr | cut -d ':' -f 2`
 dpc_wc=`echo $Depool_addr | cut -d ':' -f 1`
-if [[ ${#dpc_addr} -ne 64 ]] || [[ "${dpc_wc}" != "0" ]];then
+if [[ ${#dpc_addr} -ne 64 ]] || [[ ${dpc_wc} -lt 0 ]];then
     echo "###-ERROR(line $LINENO): Wrong depool address! ${Depool_addr}"
     exit 1
 fi
@@ -356,13 +357,13 @@ do
     Curr_Part_Addr="$(echo "$Participants_List"| jq -r ".participants|.[$i]")"
     Current_Participant_Info="$(Get_DP_Part_Info $Depool_addr $Curr_Part_Addr)"
 
-    Prev_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[0]")
+    Prev_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Prev_DP_Round_ID\"")
     POS_Info=$(printf "%'9.2f" "$(echo $((Prev_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
     
-    Curr_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[1]")
+    Curr_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Curr_DP_Round_ID\"")
     COS_Info=$(printf "%'9.2f" "$(echo $((Curr_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
     
-    Next_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[2]")
+    Next_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Next_DP_Round_ID\"")
     NOS_Info=$(printf "%'9.2f" "$(echo $((Next_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
     
     Reward=$(echo "$Current_Participant_Info"| jq -r ".reward")
@@ -397,14 +398,17 @@ do
     Curr_Part_Addr="$(echo "$Participants_List"| jq -r ".participants|.[$i]")"
     Current_Participant_Info="$(Get_DP_Part_Info $Depool_addr $Curr_Part_Addr)"
 
-    Prev_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[0]")
+    Prev_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Prev_DP_Round_ID\"")
     POS_Info=$(printf "%'9.2f" "$(echo $((Prev_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
     
-    Curr_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[1]")
+    Curr_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Curr_DP_Round_ID\"")
     COS_Info=$(printf "%'9.2f" "$(echo $((Curr_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
     
-    Next_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r "[.stakes[]]|.[2]")
+    Next_Ord_Stake=$(echo "$Current_Participant_Info" | jq -r ".stakes.\"$Next_DP_Round_ID\"")
     NOS_Info=$(printf "%'9.2f" "$(echo $((Next_Ord_Stake)) / 1000000000 | jq -nf /dev/stdin)")
+
+    Vesting_Stake=$(echo "$Current_Participant_Info" | jq -r '[.vestings[]][0].remainingAmount')
+    VOS_Info=$(printf "%'9.2f" "$(echo $((Vesting_Stake *2)) / 1000000000 | jq -nf /dev/stdin)")
 
     Reward=$(echo "$Current_Participant_Info" | jq -r ".reward")
     RWRD_Info=$(printf "%'8.2f" "$(echo $((Reward)) / 1000000000 | jq -nf /dev/stdin)")
@@ -424,7 +428,7 @@ do
     fi
 
     #--------------------------------------------
-    echo -e "$(printf '%4d' $(($i + 1))) $Curr_Part_Addr Reward: $RWRD_Info ; Stakes(${REINV_Info}): $POS_Info / $COS_Info / $NOS_Info   $Wtdr_Val_Info"
+    echo -e "$(printf '%4d' $(($i + 1))) $Curr_Part_Addr Reward: $RWRD_Info ; Stakes(${REINV_Info}): $POS_Info / $COS_Info / $NOS_Info   $Wtdr_Val_Info Vesting: $VOS_Info"
     #--------------------------------------------
 done
 

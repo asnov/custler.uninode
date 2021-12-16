@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2020-03-15 19:00:00
+# (C) Sergey Tyurin  2020-01-20 19:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -37,13 +37,6 @@ else
     SETUP_GROUP="$(id -gn)"
 fi
 
-#============================================
-# Get external IP address
-NODE_IP_ADDR=""
-until [[ "$(echo "${NODE_IP_ADDR}" | grep "\." -o | wc -l)" -eq 3 ]]; do
-    NODE_IP_ADDR="$(curl -sS ipv4bot.whatismyipaddress.com)"
-done
-
 #===========================================
 # Configs source files
 DFLT_CFG_FILE="${CONFIGS_DIR}/rnode/default_config.json"
@@ -77,7 +70,7 @@ echo " ..DONE"
 #===========================================
 # Set rnode console keys
 echo -n "---INFO: Prepare console_client_keys..."
-$HOME/bin/keygen > ${R_CFG_DIR}/${HOSTNAME}_console_client_keys.json
+${NODE_BIN_DIR}/keygen > ${R_CFG_DIR}/${HOSTNAME}_console_client_keys.json
 jq -c '.public' ${R_CFG_DIR}/${HOSTNAME}_console_client_keys.json > ${R_CFG_DIR}/console_client_public.json
 echo " ..DONE"
 
@@ -93,6 +86,18 @@ if [ ! -f "${R_CFG_DIR}/config.json" ]; then
     exit 1
 fi
 
+#===========================================
+# Set workchain for node
+if [[ "$(jq '.workchain' "${R_CFG_DIR}/config.json")" == "null" ]];then
+    echo "{\"workchain\": $NODE_WC}" | jq '. += $inputs[]' --slurpfile inputs "${R_CFG_DIR}/config.json" > "${R_CFG_DIR}/config.json.tmp"
+    mv -f "${R_CFG_DIR}/config.json.tmp" "${R_CFG_DIR}/config.json"
+else
+    jq ".workchain = $NODE_WC" "${R_CFG_DIR}/config.json"  > "${R_CFG_DIR}/config.json.tmp"
+    mv -f "${R_CFG_DIR}/config.json.tmp" "${R_CFG_DIR}/config.json"
+fi
+
+#===========================================
+# 
 if [ ! -f "${R_CFG_DIR}/console_config.json" ]; then
     echo "###-ERROR: ${R_CFG_DIR}/console_config.json does not created!"
     exit 1

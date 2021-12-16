@@ -1,4 +1,4 @@
-#!/bin/bash -eE
+#!/usr/bin/env bash
 
 BUILD_STRT_TIME=$(date +%s)
 echo
@@ -18,14 +18,17 @@ source $HOME/.cargo/env
 git clone --recurse-submodules "${TVM_LINKER_GIT_REPO}" "${TVM_LINKER_SRC_DIR}"
 cd "${TVM_LINKER_SRC_DIR}"
 git checkout "${TVM_LINKER_GIT_COMMIT}"
+git submodule init && git submodule update --recursive
+git submodule foreach 'git submodule init'
+git submodule foreach 'git submodule update  --recursive'
 
 cd "${TVM_LINKER_SRC_DIR}/tvm_linker"
 cargo update
 cargo build --release
-cp -f "${TVM_LINKER_SRC_DIR}/tvm_linker/target/release/tvm_linker" $HOME/bin/
+cp -f "${TVM_LINKER_SRC_DIR}/tvm_linker/target/release/tvm_linker" ${NODE_BIN_DIR}/
 
 echo
-$HOME/bin/tvm_linker --version
+${NODE_BIN_DIR}/tvm_linker --version
 echo
 BUILD_END_TIME=$(date +%s)
 Build_mins=$(( (BUILD_END_TIME - BUILD_STRT_TIME)/60 ))
@@ -35,12 +38,3 @@ echo "Builds took $Build_mins min $Build_secs secs"
 echo "================================================================================================"
 
 exit 0
-
-{
-  "name": "getDePoolBalance",
-  "inputs": [
-  ],
-  "outputs": [
-    {"name":"value0","type":"int256"}
-]
-},

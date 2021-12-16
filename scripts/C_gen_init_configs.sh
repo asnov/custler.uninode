@@ -1,6 +1,6 @@
-#!/bin/bash -eE
+#!/bin/bash
 
-# (C) Sergey Tyurin  2020-03-15 18:00:00
+# (C) Sergey Tyurin  2020-01-18 18:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -25,13 +25,6 @@ source "${SCRIPT_DIR}/functions.shinc"
 echo
 echo "################################# CPP node confugure script ###################################"
 echo "+++INFO: $(basename "$0") BEGIN $(date +%s) / $(date)"
-
-#============================================
-# Get external IP address
-NODE_IP_ADDR=""
-until [[ "$(echo "${NODE_IP_ADDR}" | grep "\." -o | wc -l)" -eq 3 ]]; do
-    NODE_IP_ADDR="$(curl -sS ipv4bot.whatismyipaddress.com)"
-done
 
 #===========================================
 echo "---INFO: generate initial ${TON_WORK_DIR}/db/config.json..."

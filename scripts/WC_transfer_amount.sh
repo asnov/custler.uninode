@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # (C) Sergey Tyurin  2021-08-14 10:00:00
 
 # Disclaimer
@@ -34,7 +35,7 @@ source "${SCRIPT_DIR}/env.sh"
 source "${SCRIPT_DIR}/functions.shinc"
 echo
 echo "Time Now: $(date  +'%F %T %Z')"
-echo "INFO from env: Network: $NETWORK_TYPE; Node: $NODE_TYPE; Elector: $ELECTOR_TYPE"
+echo -e "$(DispEnvInfo)"
 echo
 echo -e "$(Determine_Current_Network)"
 echo
@@ -64,7 +65,7 @@ TRANSF_AMOUNT="$3"
 NEW_ACC=$4
 [[ -z $TRANSF_AMOUNT ]] && tr_usage
 
-NANO_AMOUNT=`$CALL_TC convert tokens $TRANSF_AMOUNT|grep -v 'Config'| grep "[0-9]"`
+NANO_AMOUNT=`$CALL_TC -j convert tokens $TRANSF_AMOUNT | jq -r '.value'`
 if [[ $NANO_AMOUNT -lt 100000000 ]];then
     echo "###-ERROR(line $LINENO): Can't transfer too small amount of nanotokens! (${NANO_AMOUNT})nt"
     exit 1

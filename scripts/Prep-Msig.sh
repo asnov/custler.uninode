@@ -1,6 +1,6 @@
-#!/bin/bash -eE
+#!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2021-03-15 10:00:00
+# (C) Sergey Tyurin  2021-09-24 10:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -22,12 +22,12 @@ echo
 
 function show_usage(){
 echo
-echo " Use: ./Prep-Msig.sh <Wallet name> <'Safe' or 'SetCode'> <Num of custodians> <workchain>"
+echo " Use: ./Prep-Msig.sh <Wallet name> <'Safe' or 'SetCode'> <Num of custodians> [<workchain>]"
 echo " All fields required!"
 echo "<Wallet Name> - name of wallet. use \$HOSTNAME for main validator wallet"
 echo "<'Safe' or 'SetCode'> - SafeCode or SetCode multisig wallet"
 echo "<num of custodians> must greater 0 or less 32"
-echo "<workchain> - workchain to deploy wallet. '0' or '-1' "
+echo "<workchain> - workchain to deploy wallet. NODE_WC or '-1' "
 echo
 echo "All files will be saved in $KEY_FILES_DIR"
 echo "if you have file '<Wallet name>_1.keys.json' with seed phrase in this dir - it will used to generate address"
@@ -39,6 +39,10 @@ exit 1
 }
 
 [[ $# -lt 3 ]] && show_usage
+
+SCRIPT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P`
+source "${SCRIPT_DIR}/env.sh"
+source "${SCRIPT_DIR}/functions.shinc"
 
 CodeOfWallet=$2
 if [[ ! $CodeOfWallet == "Safe" ]] && [[ ! $CodeOfWallet == "SetCode" ]];then
@@ -52,16 +56,12 @@ if [[ $CUSTODIANS -lt 1 ]] || [[ $CUSTODIANS -gt 32 ]];then
     show_usage
     exit 1
 fi
-WorkChain="$4"
-if [[ ! "$WorkChain" == "0" ]] && [[ ! "$WorkChain" == "-1" ]];then
-    echo "###-ERROR(line $LINENO): Wrong workchain. Choose '0' or '-1'"
-    show_usage
-    exit 1
-fi
-
-SCRIPT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P`
-source "${SCRIPT_DIR}/env.sh"
-source "${SCRIPT_DIR}/functions.shinc"
+WorkChain=${4:-0}
+# if [[ "$WorkChain" != "-1" ]] && [[ "$WorkChain" != "0" ]];then
+#     echo "###-ERROR(line $LINENO): Wrong workchain. Choose '0' or '-1'"
+#     show_usage
+#     exit 1
+# fi
 
 WAL_NAME=$1
 KEY_FILES_DIR="$HOME/MSKeys_${WAL_NAME}"

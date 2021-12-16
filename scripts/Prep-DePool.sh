@@ -1,6 +1,6 @@
-#!/bin/bash -eE
+#!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2021-01-25 10:00:00
+# (C) Sergey Tyurin  2021-10-19 10:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -36,6 +36,9 @@ exit 1
 SCRIPT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P`
 source "${SCRIPT_DIR}/env.sh"
 source "${SCRIPT_DIR}/functions.shinc"
+##############
+Depool_WC=0
+##############
 
 OS_SYSTEM=`uname`
 if [[ "$OS_SYSTEM" == "Linux" ]];then
@@ -100,10 +103,16 @@ if [[ -z $key_public ]] || [[ -z $key_secret ]];then
 fi
 echo "Key pair file saved to ${KEY_FILES_DIR}/depool.keys.json"
 
+Validator_addr=`cat ${KEYS_DIR}/${HOSTNAME}.addr`
+[[ -z $Validator_addr ]] && echo "###-ERROR(line $LINENO): Validator address not found in ${KEYS_DIR}/${HOSTNAME}.addr" && exit 1
+Validator_WC=${Validator_addr%%:*}
+if [[ "$Depool_WC" != "$Validator_WC" ]];then
+    echo "###-WARNING(line $LINENO): Validator address WC is not equal Node WC"
+fi
 #=======================================================================================
 # generate depool address
 DepoolAddress=`$CALL_TC genaddr $Depool_Code $Depool_ABI \
-		--setkey "${KEY_FILES_DIR}/depool.keys.json" --wc "0" \
+		--setkey "${KEY_FILES_DIR}/depool.keys.json" --wc "$Depool_WC" \
 		| tee  ${KEY_FILES_DIR}/depool_addr-card.txt \
 		| grep "Raw address:" | awk '{print $3}' \
 		| tee ${KEY_FILES_DIR}/depool.addr`
