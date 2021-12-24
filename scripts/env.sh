@@ -52,13 +52,13 @@ export RFLD_DApp_URL="https://rfld.custler.net"
 export RFLD_DApp_List="https://rfld-dapp01.ds1.itgold.io"
 
 export RustNet_DApp_URL="rustnet.ton.dev"
-export RustNet_DApp_List="https://rustnet1.ton.dev,https://rustnet2.ton.dev"
+export RustNet_DApp_List="https://rustnet1.ton.dev"
 
 #=====================================================
 # Depool deploy defaults
 export ValidatorAssuranceT=10000        # Assurance in tokens
 export MinStakeT=10                     # Min DePool assepted stake in tokens
-export ParticipantRewardFraction=95     # In % participant share from reward
+export ParticipantRewardFraction=85     # In % participant share from reward
 export BalanceThresholdT=20             # Min depool self balance to operate
 export TIK_REPLANISH_AMOUNT=10          # If Tik acc balance less 2 tokens, It will be auto topup with this amount
 
@@ -75,7 +75,6 @@ export LC_Send_MSG_Timeout=10           # time after Lite-Client send message to
 #=====================================================
 # FLD & RFLD free giver to grant 100k tokens
 export Marvin_Addr="0:deda155da7c518f57cb664be70b9042ed54a92542769735dfb73d3eef85acdaf" 
-[[ "${NETWORK_TYPE}" == "rfld.ton.dev" ]] && export Marvin_Addr="-1:deda155da7c518f57cb664be70b9042ed54a92542769735dfb73d3eef85acdaf"
 
 #=====================================================
 # Nets zeroblock IDs - first 16 syms of zeroblock hash
@@ -125,14 +124,17 @@ export MIN_TC_VERSION="0.22.12"
 
 export CNODE_GIT_REPO="https://github.com/Everscale-Network/Everscale-Node.git"
 export CNODE_GIT_COMMIT="mainnet"
-[[ "$NETWORK_TYPE" == "fld.ton.dev" ]] && export CNODE_GIT_COMMIT="GROTH16"
+if [[ "$NETWORK_TYPE" == "fld.ton.dev" ]];then
+    export CNODE_GIT_REPO="https://github.com/NilFoundation/cpp-ton.git"
+    export CNODE_GIT_COMMIT="nil"
+fi
 
 export RNODE_GIT_REPO="https://github.com/tonlabs/ton-labs-node.git"
 export RNODE_GIT_COMMIT="master"
-# if [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] || [[ "$NETWORK_TYPE" == "fld.ton.dev" ]];then
-#     export RNODE_GIT_REPO="https://github.com/NilFoundation/rust-ton.git"
-#     export RNODE_GIT_COMMIT="1-nil-dependencies"
-# fi
+if [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]];then
+    export RNODE_GIT_REPO="https://github.com/NilFoundation/rust-ton.git"
+    export RNODE_GIT_COMMIT="master"
+fi
 
 export RCONS_GIT_REPO="https://github.com/tonlabs/ton-labs-node-tools.git"
 export RCONS_GIT_COMMIT="master"
