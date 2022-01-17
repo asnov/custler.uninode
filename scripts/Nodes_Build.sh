@@ -54,7 +54,7 @@ case "${@}" in
         DAPP_NODE_BUILD=true
         ;;
     *)
-        CPP_NODE_BUILD=true
+        CPP_NODE_BUILD=false
         RUST_NODE_BUILD=true
         DAPP_NODE_BUILD=false
         ;;
@@ -146,7 +146,7 @@ case "$OS_SYSTEM" in
         fi
         ;;
 
-    Ubuntu)
+    Ubuntu|Debian)
         export ZSTD_LIB_DIR=/usr/lib/x86_64-linux-gnu
         PKGs_SET=$PKGS_Ubuntu
         PKG_MNGR=$PKG_MNGR_Ubuntu
@@ -287,20 +287,15 @@ if ${RUST_NODE_BUILD};then
     #====== Uncomment to disabe node's logs competely
     # sed -i.bak 's%log = "0.4"%log = { version = "0.4", features = ["release_max_level_off"] }%'  Cargo.toml
 
-    # Add `sha2-native` feature (adds explicit `ed25519-dalek` dependency because it uses newer sha2 version)
-    # BSD/macOS sed requires an actual newline character to follow a\. I use copy+replace for compatibility
-    sed -i.bak -e '/^\[dependencies\]/p; s/\[dependencies\]/ed25519-dalek = "1.0"/' Cargo.toml
-    sed -i.bak -e '/^\[features\]/p; s/\[features\]/sha2-native = ["sha2\/asm", "ed25519-dalek\/asm"]/' Cargo.toml
-
     cargo update
 
-    # --features "compression,sha2-native,external_db,metrics"
+    # --features "compression,external_db,metrics"
     if ${DAPP_NODE_BUILD};then
-        RNODE_FEATURES="compression,sha2-native,external_db,metrics"
-        [[ "$NODE_TYPE" == "CPP" ]] && RNODE_FEATURES="sha2-native,external_db,metrics"
+        RNODE_FEATURES="compression,external_db,metrics"
+        [[ "$NODE_TYPE" == "CPP" ]] && RNODE_FEATURES="external_db,metrics"
     else
-        RNODE_FEATURES="sha2-native"
-        [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] && RNODE_FEATURES="compression,sha2-native"
+        RNODE_FEATURES=""
+        [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] && RNODE_FEATURES="compression"
     fi
     echo -e "${BoldText}${BlueBack}---INFO: RNODE build flags: ${RNODE_FEATURES} ${NormText}"
     RUSTFLAGS="-C target-cpu=native" cargo build --release --features "${RNODE_FEATURES}"
