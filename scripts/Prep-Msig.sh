@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2021-09-24 10:00:00
+# (C) Sergey Tyurin  2022-04-22 10:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -98,14 +98,14 @@ do
     echo "PubKey${i}: $PubKey"
     
     # generate pub/sec keypair file
-    $CALL_TC getkeypair "${KEY_FILES_DIR}/${WAL_NAME}_${i}.keys.json" "$SeedPhrase" &> /dev/null
+    $CALL_TC getkeypair -o "${KEY_FILES_DIR}/${WAL_NAME}_${i}.keys.json" -p "$SeedPhrase" &> /dev/null
 done
 
 cp -f "${KEY_FILES_DIR}/${WAL_NAME}_1.keys.json" "${KEY_FILES_DIR}/${WAL_NAME}.keys.json"
 
 #=======================================================================================
 # generate multisignature wallet address
-WalletAddress=`$CALL_TC genaddr $Wallet_Code $Wallet_ABI \
+WalletAddress=`$CALL_TC genaddr $Wallet_Code --abi $Wallet_ABI \
 		--setkey "${KEY_FILES_DIR}/${WAL_NAME}_1.keys.json" \
         --wc "$WorkChain" \
 		| tee  ${KEY_FILES_DIR}/${WAL_NAME}_addr-card.txt \

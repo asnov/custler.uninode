@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eE
 
-# (C) Sergey Tyurin  2021-10-19 10:00:00
+# (C) Sergey Tyurin  2022-05-18 18:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -64,7 +64,7 @@ esac
 
 #=====================================================
 # Packages set for different OSes
-PKGS_FreeBSD="mc libtool perl5 automake llvm-devel gmake git jq wget gawk base64 gflags ccache cmake curl gperf openssl ninja lzlib vim sysinfo logrotate gsl p7zip zstd pkgconf python google-perftools"
+PKGS_FreeBSD="mc libtool perl5 automake llvm-devel gmake git jq wget gawk base64 gflags ccache cmake curl gperf openssl ninja lzlib vim sysinfo logrotate gsl 7-zip zstd pkgconf python google-perftools"
 PKGS_CentOS="curl jq wget bc vim libtool logrotate openssl-devel clang llvm-devel ccache cmake ninja-build gperf gawk gflags snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libmicrohttpd-devel readline-devel p7zip libzstd-devel gperftools gperftools-devel"
 PKGS_Ubuntu="git mc curl build-essential libssl-dev automake libtool clang llvm-dev jq vim cmake ninja-build ccache gawk gperf texlive-science doxygen-latex libgflags-dev libmicrohttpd-dev libreadline-dev libz-dev pkg-config zlib1g-dev p7zip-full bc libzstd-dev libgoogle-perftools-dev"
 
@@ -127,6 +127,7 @@ case "$OS_SYSTEM" in
             $PKG_MNGR install -y gcc-toolset-10-toolchain
             source /opt/rh/gcc-toolset-10/enable
         fi
+        sudo systemctl daemon-reload
         ;;
 
     Oracle)
@@ -144,6 +145,23 @@ case "$OS_SYSTEM" in
             $PKG_MNGR install -y gcc-toolset-10-toolchain
             source /opt/rh/gcc-toolset-10/enable
         fi
+        sudo systemctl daemon-reload
+        ;;
+
+    Fedora)
+        export ZSTD_LIB_DIR=/usr/lib64
+        PKGs_SET=$PKGS_CentOS
+        PKG_MNGR=$PKG_MNGR_CentOS
+        $PKG_MNGR -y update --allowerasing
+        $PKG_MNGR group install -y "Development Tools"
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.13.3/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+        if ${CPP_NODE_BUILD};then
+            $PKG_MNGR remove -y boost
+            $PKG_MNGR install -y gcc-toolset-10 gcc-toolset-10-gcc
+            $PKG_MNGR install -y gcc-toolset-10-toolchain
+            source /opt/rh/gcc-toolset-10/enable
+        fi
+        sudo systemctl daemon-reload
         ;;
 
     Ubuntu|Debian)
@@ -166,6 +184,7 @@ case "$OS_SYSTEM" in
             cd libmicrohttpd-0.9.70
             ./configure && make && sudo make install
         fi
+        sudo systemctl daemon-reload
         ;;
 
     *)
@@ -263,6 +282,7 @@ if ${CPP_NODE_BUILD};then
     echo "---INFO: build utils (convert_address)... DONE"
 fi
 #=====================================================
+######################################################
 # Build rust node
 if ${RUST_NODE_BUILD};then
     echo
@@ -285,19 +305,20 @@ if ${RUST_NODE_BUILD};then
 
     sed -i.bak 's%features = \[\"cmake_build\", \"dynamic_linking\"\]%features = \[\"cmake_build\"\]%g' Cargo.toml
     #====== Uncomment to disabe node's logs competely
-    # sed -i.bak 's%log = "0.4"%log = { version = "0.4", features = ["release_max_level_off"] }%'  Cargo.toml
+    # sed -i.bak 's%log = '0.4'%log = { version = "0.4", features = ["release_max_level_off"] }%'  Cargo.toml
 
     cargo update
 
-    # --features "compression,external_db,metrics"
-    if ${DAPP_NODE_BUILD};then
-        RNODE_FEATURES="compression,external_db,metrics"
-        [[ "$NODE_TYPE" == "CPP" ]] && RNODE_FEATURES="external_db,metrics"
-    else
-        RNODE_FEATURES=""
-        [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] && RNODE_FEATURES="compression"
-    fi
-    echo -e "${BoldText}${BlueBack}---INFO: RNODE build flags: ${RNODE_FEATURES} ${NormText}"
+    # node git commit
+    export GC_TON_NODE="$(git --git-dir="$RNODE_SRC_DIR/.git" rev-parse HEAD 2>/dev/null)"
+    # block version
+    export NODE_BLK_VER=$(cat $RNODE_SRC_DIR/src/validating_utils.rs |grep -A1 'supported_version'|tail -1|tr -d ' ')
+
+    # patch main.rs
+    sed -i.bak -e '/TON NODE git commit:         {}\\n\\/p; s/TON NODE git commit:         {}\\n\\/Node block version:          {}\\n\\/' $RNODE_SRC_DIR/src/main.rs
+    sed -i.bak -e '/std::option_env!("GC_TON_NODE").unwrap_or("Not set"),/p; s/std::option_env!("GC_TON_NODE").unwrap_or("Not set"),/std::option_env!("NODE_BLK_VER").unwrap_or("Not set"),/' $RNODE_SRC_DIR/src/main.rs
+
+    echo -e "${BoldText}${BlueBack}---INFO: RNODE build flags: ${RNODE_FEATURES} commit: ${GC_TON_NODE} Block version: ${NODE_BLK_VER}${NormText}"
     RUSTFLAGS="-C target-cpu=native" cargo build --release --features "${RNODE_FEATURES}"
 
     # cp $NODE_BIN_DIR/rnode $NODE_BIN_DIR/rnode_${BackUP_Time}|cat
@@ -383,6 +404,24 @@ cd ${NODE_TOP_DIR}
 git clone --single-branch --branch ${Surf_GIT_Commit} ${CONTRACTS_GIT_REPO} "${ContractsDIR}/Surf-contracts"
 
 curl -o ${Elector_ABI} ${RustCup_El_ABI_URL} &>/dev/null
+
+#=====================================================
+# Check reboot required after update
+case "$OS_SYSTEM" in
+    FreeBSD)
+        ;;
+    Oracle|CentOS)
+            needs-restarting -r
+        ;;
+    Ubuntu|Debian)
+        if [ -f /var/run/reboot-required ]; then
+            echo 'reboot required'
+            cat /var/run/reboot-required.pkgs
+        fi
+        ;;
+    *)
+        ;;
+esac
 
 echo 
 echo '################################################'

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2022-01-08 19:00:00
+# (C) Sergey Tyurin  2022-06-10 13:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -26,39 +26,51 @@ OS_SYSTEM=`uname -s`
 # All nets configs folder
 export CONFIGS_DIR=${NODE_TOP_DIR}/configs
 
+# SECURITY messages
+# if you use only Custler's scripts and nothing more, set it true for messages about new releases!
+export newReleaseSndMsg=true
+
+#=====================================================
+# SECURITY updates
+export Enable_Node_Autoupdate=true             # will automatically update rnode, rconsole, tonos-cli etc..
+export Enable_Scripts_Autoupdate=false         # Updating scripts. NB! Change it to true if you fully trust me ONLY!!
+# Last Node Info Contract for safe node update
+export LNIC_ADDRESS="0:bdcefecaae5d07d926f1fa881ea5b61d81ea748bd02136c0dbe76604323fc347"
+
 #=====================================================
 # Network related variables
-export NETWORK_TYPE="rfld.ton.dev"      # can be main.* / net.* / fld.* / rustnet.* / rfld.*
-export NODE_TYPE="RUST"                 # Can be CPP / RUST. Also defines network to build DApp fullnode with or w/o compression
+export NETWORK_TYPE="main.ton.dev"      # can be main.* / net.* / fld.* / rfld.* / rustnet.*
+export Node_Blk_Min_Ver=30
+export NODE_TYPE="RUST"                 # Can be CPP / RUST. 
 export ELECTOR_TYPE="fift"
-export NODE_WC=0                        # Node WorkChain (for rust network)
+export NODE_WC=0                        # Node WorkChain 
 
 export FORCE_USE_DAPP=false             # For offnode works or to use DApp Server instead of use node's console to operate
-export STAKE_MODE="msig"                # can be 'msig' or 'depool'
+export STAKE_MODE="depool"              # can be 'msig' or 'depool'
 export MAX_FACTOR=3
 
 #=====================================================
 # Networks endpoints
 export Main_DApp_URL="https://main.ton.dev"
-export MainNet_DApp_List="https://main2.ton.dev,https://main3.ton.dev,https://main4.ton.dev"
+export MainNet_DApp_List="https://eri01.main.everos.dev,https://gra01.main.everos.dev,https://gra02.main.everos.dev,https://lim01.main.everos.dev,https://rbx01.main.everos.dev"
 
 export DevNet_DApp_URL="https://net.ton.dev"
-export DevNet_DApp_List="https://net1.ton.dev,https://net5.ton.dev"
+export DevNet_DApp_List="https://eri01.net.everos.dev,https://rbx01.net.everos.dev,https://gra01.net.everos.dev"
 
 export FLD_DApp_URL="https://gql.custler.net"
 export FLD_DApp_List="https://gql.custler.net"
 
-export RFLD_DApp_URL="https://rfld.custler.net"
-export RFLD_DApp_List="https://rfld-dapp01.ds1.itgold.io"
+export RFLD_DApp_URL="https://rfld-dapp.itgold.io"
+export RFLD_DApp_List="https://rfld-dapp.itgold.io"
 
-export RustNet_DApp_URL="rustnet.ton.dev"
+export RustNet_DApp_URL="https://rustnet.ton.dev"
 export RustNet_DApp_List="https://rustnet1.ton.dev"
 
 #=====================================================
 # Depool deploy defaults
-export ValidatorAssuranceT=10000        # Assurance in tokens
+export ValidatorAssuranceT=100000       # Assurance in tokens
 export MinStakeT=10                     # Min DePool assepted stake in tokens
-export ParticipantRewardFraction=85     # In % participant share from reward
+export ParticipantRewardFraction=95     # In % participant share from reward
 export BalanceThresholdT=20             # Min depool self balance to operate
 export TIK_REPLANISH_AMOUNT=10          # If Tik acc balance less 2 tokens, It will be auto topup with this amount
 
@@ -80,7 +92,7 @@ export Marvin_Addr="0:deda155da7c518f57cb664be70b9042ed54a92542769735dfb73d3eef8
 # Nets zeroblock IDs - first 16 syms of zeroblock hash
 export MAIN_NET_ID="58FFCA1A178DAFF7"
 export  DEV_NET_ID="B2E99A7505EDA599"
-export  FLD_NET_ID="EA2CCBDD761FD4B5"
+export  FLD_NET_ID="F6176FF8E2CA6E5D"
 export RFLD_NET_ID="AA183E8917635635"
 export  RST_NET_ID="228F05E8BCB11DEF"
 
@@ -118,11 +130,14 @@ export C_ENGINE_ADDITIONAL_PARAMS=""
 
 #=====================================================
 # GIT addresses & commits
-export RUST_VERSION="1.57.0"
+export RUST_VERSION="1.61.0"
 export BOOST_VERSION="1.76.0"
-export MIN_TC_VERSION="0.24.11"
-export MIN_RC_VERSION="0.1.255"
+export MIN_TC_VERSION="0.26.7"
+export MIN_RC_VERSION="0.1.280"
 
+# for corect work automatic update 
+# GIT_COMMIT should be "master" or certain commit only
+# not a branch name!
 export CNODE_GIT_REPO="https://github.com/Everscale-Network/Everscale-Node.git"
 export CNODE_GIT_COMMIT="mainnet"
 if [[ "$NETWORK_TYPE" == "fld.ton.dev" ]];then
@@ -132,9 +147,9 @@ fi
 
 export RNODE_GIT_REPO="https://github.com/tonlabs/ton-labs-node.git"
 export RNODE_GIT_COMMIT="master"
-if [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]];then
-    export RNODE_GIT_REPO="https://github.com/NilFoundation/rust-ton.git"
-    export RNODE_GIT_COMMIT="2-groth16-verification-encrypted-input-mode"
+if [[ "$NETWORK_TYPE" == "fld.ton.dev" ]];then
+    export RNODE_GIT_REPO="https://github.com/Custler/evs-rnode.git"
+    export RNODE_GIT_COMMIT="master"
 fi
 
 export RCONS_GIT_REPO="https://github.com/tonlabs/ton-labs-node-tools.git"
@@ -200,7 +215,7 @@ export CRYPTO_DIR=$TON_SRC_DIR/crypto
 export ContractsDIR="${NODE_TOP_DIR}/ton-labs-contracts"
 
 export DSCs_DIR="${ContractsDIR}/solidity/depool"
-[[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] && export DSCs_DIR="${CONFIGS_DIR}/depool_RFLD"
+# [[ "$NETWORK_TYPE" == "rfld.ton.dev" ]] && export DSCs_DIR="${CONFIGS_DIR}/depool_RFLD"
 export DePool_ABI="$DSCs_DIR/DePool.abi.json"
 
 export FSCs_DIR="${CRYPTO_DIR}/smartcont"
@@ -250,11 +265,10 @@ export Tg_Warn_sign=$(echo -e "\U000026A0")
 
 #=================================================
 # var for icinga monitoring
-export prepElections="${TON_LOG_DIR}/prepForElections"
-export partInElections="${TON_LOG_DIR}/partInElections"
-export nextElections="${TON_LOG_DIR}/nextElections"
-export nodeStats="${TON_LOG_DIR}/nodeStats"
-
+export prepElections="${TON_LOG_DIR:-$R_LOG_DIR}/prepForElections"
+export partInElections="${TON_LOG_DIR:-$R_LOG_DIR}/partInElections"
+export nextElections="${TON_LOG_DIR:-$R_LOG_DIR}/nextElections"
+export nodeStats="${TON_LOG_DIR:-$R_LOG_DIR}/nodeStats"
 #=================================================
 # File to keep changes of default variables from this file 
 # to avoid reconfig after "git pull "

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# (C) Sergey Tyurin  2020-08-01 11:00:00
+# (C) Sergey Tyurin  2022-05-16 13:00:00
 
 # Disclaimer
 ##################################################################################################################
@@ -18,51 +18,19 @@
 # Author(s) retain the right to alter this disclaimer at any time.
 ##################################################################################################################
 
+
+echo
+echo "##################################### Postupdate Script ########################################"
+echo "INFO: $(basename "$0") BEGIN $(date +%s) / $(date  +'%F %T %Z')"
+
 SCRIPT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P`
 source "${SCRIPT_DIR}/env.sh"
 
-Curr_UnixTime=$(date +%s)
-echo
-echo "############################## Rust node Reset Database script #################################"
-echo "+++INFO: $(basename "$0") BEGIN $Curr_UnixTime / $(date  +'%F %T %Z')"
-echo
+#################################################################
+# ${SCRIPT_DIR}/next_elect_set_time.sh
+#################################################################
+echo "Nothing to do."
 
-#===========================================
-# Stop rnode service
-echo -n "---INFO: Stopping rnode service ..."
-sudo service $ServiceName stop
-sleep 5
-echo " ..DONE"
-
-#===========================================
-# Save all configs
-echo -n "---INFO: Save rnode configs to $TON_WORK_DIR/rnode_configs_backup_${Curr_UnixTime} ..."
-cp -r "${R_CFG_DIR}" "$TON_WORK_DIR/rnode_configs_backup_${Curr_UnixTime}"
-echo " ..DONE"
-
-#===========================================
-# Rename rnode DB folder for backup
-echo -n "---INFO: Rename current DB to $TON_WORK_DIR/rnode_DB_backup_${Curr_UnixTime} ..."
-mv -f "${R_DB_DIR}" "$TON_WORK_DIR/rnode_DB_backup_${Curr_UnixTime}"
-echo " ..DONE"
-
-#===========================================
-# Generate generate new DB
-# echo -n "---INFO: Genegate New DB..."
-# $CALL_RN --ckey "$(cat "${R_CFG_DIR}/console_client_public.json")" &>/dev/null &
-# sleep 10
-# pkill rnode &>/dev/null
-# sleep 5
-# echo " ..DONE"
-
-#===========================================
-# Start rnode service
-echo -n "---INFO: Starting rnode service ..."
-sudo service $ServiceName start
-sleep 5
-echo " ..DONE"
-
-echo
 echo "+++INFO: $(basename "$0") FINISHED $(date +%s) / $(date  +'%F %T %Z')"
 echo "================================================================================================"
 
